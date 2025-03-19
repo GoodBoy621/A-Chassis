@@ -155,7 +155,7 @@ script.Parent:WaitForChild("Values")
 	local RWheelCount = 0
 	local Wheels = {}
 	for _, v in car.Wheels:GetChildren() do
-		if not ((v.Name == "FL" or v.Name == "FR" or v.Name == "F" or v.Name == "RL" or v.Name == "RR" or v.Name == "R") and v:IsA("BasePart")) then continue end
+		if not ((v.Name == "FL" or v.Name == "FR" or v.Name == "F" or v.Name == "RL" or v.Name == "RR" or v.Name == "R" or v.Name == "FR1" or v.Name == "FL1") and v:IsA("BasePart")) then continue end
 		table.insert(Wheels, v)
 		FWheelCount += string.find(v.Name, "F") and 1 or 0
 		RWheelCount += (not string.find(v.Name, "F")) and 1 or 0
@@ -241,7 +241,7 @@ function GetCenter()
 	local countR = 0
 	for i,v in Wheels do
 		if not v:IsA("BasePart") then continue end
-		if v.Name=="FL" or v.Name=="FR" or v.Name=="F" then
+		if v.Name=="FL" or v.Name=="FR" or v.Name=="F" or v.Name=="FL1" or v.Name=="FR1" then
 			centerF = centerF+v.CFrame.p
 			countF = countF+1
 		else
@@ -517,7 +517,7 @@ end
 local Drive={}
 
 --Power Front Wheels
-	if _Tune.Config == "FWD" or _Tune.Config == "AWD" then for i,v in Wheels do if v.Name=="FL" or v.Name=="FR" or v.Name=="F" then table.insert(Drive,v) end end end
+	if _Tune.Config == "FWD" or _Tune.Config == "AWD" then for i,v in Wheels do if v.Name=="FL" or v.Name=="FR" or v.Name=="F" or v.Name=="FL1" or v.Name=="FR1" then table.insert(Drive,v) end end end
 
 --Power Rear Wheels
 	if _Tune.Config == "RWD" or _Tune.Config == "AWD" then for i,v in Wheels do if v.Name=="RL" or v.Name=="RR" or v.Name=="R" then table.insert(Drive,v) end end end
@@ -604,6 +604,10 @@ function Steering(dt)
 			angle = (_GSteerC<0 and SteerInner or SteerOuter)*sDecay
 		elseif v.Name == "FR" then
 			angle = (_GSteerC<0 and SteerOuter or SteerInner)*sDecay
+		elseif v.Name == "FR1" then
+			angle = (_GSteerC<0 and (SteerInner/2) or (SteerOuter/2))*sDecay
+		elseif v.Name == "FL1" then
+			angle = (_GSteerC<0 and (SteerInner/2) or (SteerOuter/2))*sDecay
 		elseif v.Name == "F" then
 			angle = SteerInner*sDecay
 		elseif v.Name == "RL" then
@@ -984,7 +988,9 @@ function Engine(dt)
 		local RLdiffMult=1
 		local FRdiffMult=1
 		local FLdiffMult=1
-		if v.Name=="FL" or v.Name=="RL" then aRef=-1 end
+		local FR1diffMult=1
+		local FL1diffMult=1
+		if v.Name=="FL" or v.Name=="RL" or v.Name=="FL1" then aRef=-1 end
 		
 		--Differential/Torque-Vectoring
 		if v.Name=="FR" then
@@ -995,6 +1001,16 @@ function Engine(dt)
 			local avg=((_WheelSpeeds[v.Name]/_WheelSpeeds["FR"])-1)*(_Tune.FDiffPreload/10)
 			FLdiffMult=math.ceil(math.max(0,math.min(2,1-( ((_Tune.FDiffPower/100)*avg*_GThrot) + ((_Tune.FDiffCoast/100)*avg*(1-_GThrot)))))*100)/100
 			FRdiffMult=2-FLdiffMult
+
+		elseif v.Name=="FR1" then
+				local avg=((_WheelSpeeds[v.Name]/_WheelSpeeds["FL1"])-1)*(_Tune.FDiffPreload/10)
+				FR1diffMult=math.ceil(math.max(0,math.min(2,1-( ((_Tune.FDiffPower/100)*avg*_GThrot) + ((_Tune.FDiffCoast/100)*avg*(1-_GThrot)))))*100)/100
+				FL1diffMult=2-FR1diffMult
+			elseif v.Name=="FL1" then
+				local avg=((_WheelSpeeds[v.Name]/_WheelSpeeds["FR1"])-1)*(_Tune.FDiffPreload/10)
+				FL1diffMult=math.ceil(math.max(0,math.min(2,1-( ((_Tune.FDiffPower/100)*avg*_GThrot) + ((_Tune.FDiffCoast/100)*avg*(1-_GThrot)))))*100)/100
+				FR1diffMult=2-FL1diffMult
+
 		elseif v.Name=="RR" then
 			local avg=((_WheelSpeeds[v.Name]/_WheelSpeeds["RL"])-1)*(_Tune.RDiffPreload/10)
 			RRdiffMult=math.ceil(math.max(0,math.min(2,1-( ((_Tune.RDiffPower/100)*avg*_GThrot) + ((_Tune.RDiffCoast/100)*avg*(1-_GThrot)))))*100)/100
